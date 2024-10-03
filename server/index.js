@@ -329,9 +329,100 @@ app.delete("/deleteComprador/:id", (req, res) => {
 });
 
 
-// OPERACIONES DE BASE DE DATOS CON LA TABLA DE "X" -----------------------------------------------
+// OPERACIONES DE BASE DE DATOS CON LA TABLA DE "LOGISTICA_REQUERIMIENTOS" -----------------------------------------------
 
-// ...
+// Crear requerimiento
+app.post("/createRequerimiento", (req, res) => {
+    const insumo = req.body.insumo;
+    const cantidad = req.body.cantidad;
+    const proveedor = req.body.proveedor;
+
+    db.query(
+        'INSERT INTO logistica_requerimientos(insumo, cantidad, proveedor) VALUES(?, ?, ?)',
+        [insumo, cantidad, proveedor],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                res.send(result);
+            }
+        }
+    );
+});
+
+// Obtener todos los requerimientos
+app.get("/registrosRequerimientos", (req, res) => {
+    db.query('SELECT * FROM logistica_requerimientos',
+        (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                res.send(result);
+            }
+        }
+    );
+});
+
+// Actualizar requerimiento
+app.put("/updateRequerimiento", (req, res) => {
+    const id = req.body.id;
+    const insumo = req.body.insumo;
+    const cantidad = req.body.cantidad;
+    const proveedor = req.body.proveedor;
+
+    db.query(
+        'UPDATE logistica_requerimientos SET insumo=?, cantidad=?, proveedor=? WHERE id=?',
+        [insumo, cantidad, proveedor, id],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                res.send(result);
+            }
+        }
+    );
+});
+
+// Eliminar requerimiento
+app.delete("/deleteRequerimiento/:id", (req, res) => {
+    const id = req.params.id;
+
+    db.query('DELETE FROM logistica_requerimientos WHERE id=?', id,
+        (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                res.send(result);
+            }
+        }
+    );
+});
+
+
+// OPERACIONES DE BASE DE DATOS CON LA TABLA DE "Análisis de Negocios" -----------------------------------------------
+
+app.get("/analisisVentas", (req, res) => {
+    db.query(`SELECT fecha, SUM(total) AS total_ventas FROM ventas GROUP BY fecha ORDER BY fecha ASC`, (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send("Error al obtener los datos de ventas");
+        }
+        res.send(result);
+    });
+});
+
+app.get("/margenesGanancia", (req, res) => {
+    const query = `SELECT DATE(fecha) AS fecha, 
+                          SUM(precio * cantidad) - (SELECT SUM(costo) FROM costos WHERE DATE(fecha) = DATE(costo.fecha_produccion)) AS margen_ganancia
+                   FROM ventas 
+                   GROUP BY DATE(fecha)`;
+    db.query(query, (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: "Error al obtener márgenes de ganancia" });
+        }
+        res.json(result);
+    });
+});
 
 // INDICACIÓN DE PUERTO A UTILIZAR
 app.listen(3001,()=>{

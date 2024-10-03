@@ -16,6 +16,7 @@ function Header() {
         <a href="/lotes-producidos">Lotes Producidos</a>
         <a href="/registro-compradores">Compradores</a>
         <a href="/analisis-negocios">Análisis de Negocios</a>
+        <a href="/logistica-requerimientos">Logística</a>
         <a href="/seguridad">Seguridad</a>
       </nav>
       <a href="/iniciosesion" className="login-button">Cerrar Sesión</a>
