@@ -1,0 +1,91 @@
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: rgba(247, 240, 233, 0.8); /* Fondo claro */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Sombra más intensa para destacar sobre el fondo */
+    border-radius: 10px;
+  }
+  
+  .login-header {
+    text-align: center;
+  }
+  
+  .logo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+    margin-right: 20px;
+  }
+  
+  .login-header h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #9B3A44; /* Color del título principal */
+  }
+  
+  .login-header h2 {
+    font-size: 1.2em;
+    color: #777; /* Manteniendo el gris para el subtítulo */
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+    width: 100%;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 1em;
+    color: #7D1628; /* Color de las etiquetas */
+  }
+  
+  .form-group input {
+    width: 300px;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #E8BB5C; /* Color del borde de los inputs */
+    border-radius: 4px;
+    transition: border-color 0.3s ease; /* Suaviza el cambio de color */
+  }
+  
+  .form-group input:focus {
+    border-color: #9B3A44; /* Color del borde al enfocar */
+    box-shadow: 0 0 5px rgba(155, 58, 68, 0.5); /* Sombra al enfocar */
+  }
+  
+  .password-link {
+    display: block;
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #9B3A44; /* Color del enlace de contraseña */
+    text-decoration: none;
+  }
+  
+  .password-link:hover {
+    text-decoration: underline;
+  }
+  
+  .back-button {
+    margin-top: 30px;
+    font-size: 1em;
+    padding: 10px 20px;
+    background-color: #E8BB5C; /* Color de fondo del botón */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  
+  .back-button:hover {
+    background-color: #CDA394; /* Color más oscuro al pasar el ratón */
+  }

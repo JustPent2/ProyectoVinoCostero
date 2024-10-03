@@ -1,0 +1,63 @@
+/* Estilos para el header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #7D1628; /* Color oscuro de fondo para el header */
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  }
+  
+  /* Estilos para el logo */
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo img {
+    margin-right: 10px;
+    max-width: 125px;
+    max-height: 125px;
+  }
+  
+  .logo h1 {
+    font-size: 24px;
+    color: #F7F0E9; /* Color claro para el texto del título */
+    margin: 0;
+  }
+  
+  /* Estilos para el menú de navegación */
+  .nav-menu {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .nav-menu a {
+    text-decoration: none;
+    font-size: 16px;
+    color: #F6EBD6; /* Color claro para los enlaces */
+    padding: 8px 12px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .nav-menu a:hover {
+    background-color: #CDA394; /* Fondo claro en hover */
+    color: #7D1628; /* Color oscuro en hover */
+    border-radius: 4px;
+  }
+  
+  /* Estilos para el botón de inicio de sesión */
+  .login-button {
+    text-decoration: none;
+    background-color: #E8BB5C; /* Color de botón */
+    color: #7D1628; /* Texto oscuro en el botón */
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .login-button:hover {
+    background-color: #CDA394; /* Fondo claro en hover */
+    color: #F7F0E9; /* Texto claro en hover */
+  }
