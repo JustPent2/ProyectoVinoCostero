@@ -13,7 +13,6 @@ function ComGestionUsuarios() {
   const [contrasenia, setContrasenia] = useState("");
   const [correo, setCorreo] = useState("");
   const [numero, setNumero] = useState("");
-  const [rol, setRol] = useState("");
   const [id, setId] = useState(0);
 
   const [editar, setEditar] = useState(false);
@@ -26,7 +25,6 @@ function ComGestionUsuarios() {
       contrasenia:contrasenia,
       correo:correo,
       numero:numero,
-      rol:rol
     }).then(()=>{
       getRegistros();
       limpiar();
@@ -52,7 +50,6 @@ function ComGestionUsuarios() {
         nombre: nombre,
         correo: correo,
         numero: numero,
-        rol: rol
     };
 
     // Solo actualizar la contraseña si el usuario ingresó una nueva
@@ -119,7 +116,6 @@ function ComGestionUsuarios() {
     setContrasenia("");
     setCorreo("");
     setNumero("");
-    setRol("");
     setId("");
     setEditar(false);
   };
@@ -132,7 +128,6 @@ function ComGestionUsuarios() {
     setContrasenia(""); // No mostrar la contraseña
     setCorreo(val.correo_electronico);
     setNumero(val.numero_telefono);
-    setRol(val.rol);
     setId(val.id_usuario);
   };
 
@@ -195,15 +190,6 @@ function ComGestionUsuarios() {
           className="form-control" value={numero} placeholder="Ingrese un número de teléfono" aria-label="Username" aria-describedby="basic-addon1"/>
         </div>
 
-        <div className="input-group mb-3">
-          <span className="input-group-text" id="basic-addon1">Rol:</span>
-          <input type="text" 
-          onChange={(event)=>{
-            setRol(event.target.value);
-          }}
-          className="form-control" value={rol} placeholder="Ingrese el Respectivo Rol" aria-label="Username" aria-describedby="basic-addon1"/>
-        </div>
-
         <div>
         {
           editar? 
@@ -224,7 +210,6 @@ function ComGestionUsuarios() {
                   <th scope="col">Nombre</th>
                   <th scope="col">Correo Electrónico</th>
                   <th scope="col">Número de Teléfono</th>
-                  <th scope="col">Rol</th>
                   <th scope="col">Acciones</th>
                 </tr>
           </thead>

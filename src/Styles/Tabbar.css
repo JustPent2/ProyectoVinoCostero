@@ -1,0 +1,31 @@
+.tab-bar {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  
+  .tab-bar button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    background-color: #E8BB5C !important; /* Color de fondo para los botones */
+    color: #7D1628 !important; /* Color del texto */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 5px; /* Bordes redondeados */
+  }
+  
+  .tab-bar button:hover {
+    background-color: #CDA394 !important; /* Color de fondo al pasar el ratón */
+  }
+  
+  .tab-bar button.active {
+    background-color: #9B3A44 !important; /* Color de fondo activo */
+    color: white !important; /* Color del texto activo */
+  }
+  
+  .tab-content {
+    margin-top: 20px;
+    padding: 20px; /* Espaciado interno */
+    border-radius: 8px; /* Bordes redondeados */
+  }

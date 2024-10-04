@@ -9,6 +9,7 @@ function Seguridad() {
   return (
     <main className='inicio'>
         <Header/>
+        INICIO SIN FUNCIÓN ESPECÍFICA
     </main>
 );
 }

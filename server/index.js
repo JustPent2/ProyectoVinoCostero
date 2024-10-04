@@ -28,8 +28,8 @@ app.post("/create", (req, res) => {
             res.status(500).send('Error al encriptar la contraseña');
         } else {
             db.query(
-                'INSERT INTO usuarios(nombre_usuario, contrasenia, correo_electronico, numero_telefono, rol) VALUES(?,?,?,?,?)',
-                [nombre, hash, correo, numero, rol],
+                'INSERT INTO usuarios(nombre_usuario, contrasenia, correo_electronico, numero_telefono) VALUES(?,?,?,?)',
+                [nombre, hash, correo, numero],
                 (err, result) => {
                     if (err) {
                         console.log(err);
@@ -60,17 +60,16 @@ app.put("/update", (req, res) => {
     const contrasenia = req.body.contrasenia;
     const correo = req.body.correo;
     const numero = req.body.numero;
-    const rol = req.body.rol;
 
     // Crear la consulta base
-    let query = 'UPDATE usuarios SET nombre_usuario=?, correo_electronico=?, numero_telefono=?, rol=? WHERE id_usuario=?';
-    let values = [nombre, correo, numero, rol, id];
+    let query = 'UPDATE usuarios SET nombre_usuario=?, correo_electronico=?, numero_telefono=? WHERE id_usuario=?';
+    let values = [nombre, correo, numero, id];
 
     // Si la contraseña fue enviada, actualizarla
     if (contrasenia) {
-        query = 'UPDATE usuarios SET nombre_usuario=?, contrasenia=?, correo_electronico=?, numero_telefono=?, rol=? WHERE id_usuario=?';
+        query = 'UPDATE usuarios SET nombre_usuario=?, contrasenia=?, correo_electronico=?, numero_telefono=? WHERE id_usuario=?';
         const hashedPassword = bcrypt.hashSync(contrasenia, 10); // Encriptar la nueva contraseña
-        values = [nombre, hashedPassword, correo, numero, rol, id];
+        values = [nombre, hashedPassword, correo, numero, id];
     }
 
     db.query(query, values, (err, result) => {
@@ -82,23 +81,53 @@ app.put("/update", (req, res) => {
     });
 });
 
-// Eliminar un usuario
+// Eliminar un usuario y sus roles
 app.delete("/delete/:id", (req, res) => {
     const id = req.params.id;
 
-    db.query('DELETE FROM usuarios WHERE id_usuario=?', [id], (err, result) => {
+    // Iniciar una transacción para asegurar que ambas eliminaciones se realicen correctamente
+    db.beginTransaction((err) => {
         if (err) {
-            console.log(err);
-        } else {
-            res.send(result);
+            return res.status(500).send({ error: "Error al iniciar la transacción" });
         }
+
+        // Eliminar los roles del usuario
+        db.query('DELETE FROM usuario_roles WHERE id_usuario = ?', [id], (err) => {
+            if (err) {
+                return db.rollback(() => {
+                    console.log(err);
+                    return res.status(500).send({ error: "Error al eliminar los roles del usuario" });
+                });
+            }
+
+            // Eliminar el usuario
+            db.query('DELETE FROM usuarios WHERE id_usuario = ?', [id], (err, result) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.log(err);
+                        return res.status(500).send({ error: "Error al eliminar el usuario" });
+                    });
+                }
+
+                // Confirmar la transacción
+                db.commit((err) => {
+                    if (err) {
+                        return db.rollback(() => {
+                            console.log(err);
+                            return res.status(500).send({ error: "Error al confirmar la transacción" });
+                        });
+                    }
+                    res.send(result); // Responder con el resultado de la eliminación
+                });
+            });
+        });
     });
 });
 
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
 
-    // Consulta a la base de datos
+    // Consulta a la base de datos para verificar las credenciales
     db.query("SELECT * FROM usuarios WHERE nombre_usuario = ?", [username], (err, result) => {
         if (err) {
             console.log("Error en la consulta de la base de datos:", err);
@@ -121,11 +150,125 @@ app.post("/login", (req, res) => {
 
             // Verificar si las contraseñas coinciden
             if (isMatch) {
-                return res.status(200).json({ authenticated: true, message: "Inicio de sesión exitoso" });
+                // Obtener el rol del usuario
+                const rolQuery = `
+                    SELECT ur.id_rol
+                    FROM usuario_roles ur
+                    WHERE ur.id_usuario = ?;
+                `;
+
+                db.query(rolQuery, [usuario.id_usuario], (err, rolResult) => {
+                    if (err) {
+                        console.log("Error al obtener el rol del usuario:", err);
+                        return res.status(500).json({ error: "Error al obtener el rol del usuario" });
+                    }
+
+                    // Verificar si el rol existe
+                    if (rolResult.length === 0) {
+                        return res.status(200).json({ authenticated: true, message: "Inicio de sesión exitoso", rol: null });
+                    }
+
+                    const id_rol = rolResult[0].id_rol;
+                    const ip_acceso = req.ip; // Obtener la IP de acceso
+
+                    // Eliminar todos los registros en rol_acceso
+                    db.query("DELETE FROM rol_acceso", (err) => {
+                        if (err) {
+                            console.log("Error al eliminar en rol_acceso:", err);
+                            return res.status(500).json({ error: "Error al eliminar el acceso del usuario" });
+                        }
+
+                        // Insertar el nuevo registro en rol_acceso
+                        db.query("INSERT INTO rol_acceso (ip_acceso, nombre_usuario, id_rol) VALUES (?, ?, ?)", [ip_acceso, usuario.nombre_usuario, id_rol], (err) => {
+                            if (err) {
+                                console.log("Error al insertar en rol_acceso:", err);
+                                return res.status(500).json({ error: "Error al almacenar el acceso del usuario" });
+                            }
+
+                            return res.status(200).json({ authenticated: true, message: "Inicio de sesión exitoso", rol: id_rol });
+                        });
+                    });
+                });
             } else {
                 return res.status(200).json({ authenticated: false, message: "Usuario o Contraseña incorrecta" });
             }
         });
+    });
+});
+
+// Identificar Usuarios y sus Roles
+app.get('/usuarios', (req, res) => {
+    const query = `
+      SELECT u.id_usuario, u.nombre_usuario, u.correo_electronico, u.numero_telefono, IFNULL(r.nombre_rol, 'SIN ROL ASIGNADO') AS rol FROM usuarios u LEFT JOIN usuario_roles ur ON u.id_usuario = ur.id_usuario LEFT JOIN roles r ON ur.id_rol = r.id_rol;`;
+  
+    // Utilizar la variable db para la consulta
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error al obtener los usuarios:', err);
+        res.status(500).send('Error en el servidor');
+      } else {
+        res.json(results);
+      }
+    });
+  });
+
+// Actualizar el rol de un usuario
+app.put('/actualizar_rol/:id_usuario', (req, res) => {
+    const id_usuario = req.params.id_usuario;
+    const { id_rol } = req.body;
+  
+    console.log(`Actualizando rol para el usuario ID: ${id_usuario} con rol ID: ${id_rol}`);
+  
+    // Verificar si el rol es válido
+    const queryCheckRole = `SELECT * FROM roles WHERE id_rol = ?`;
+  
+    db.query(queryCheckRole, [id_rol], (err, roleResult) => {
+      if (err) {
+        console.error('Error al verificar el rol:', err);
+        return res.status(500).send('Error en el servidor al verificar el rol');
+      } 
+  
+      if (roleResult.length === 0) {
+        console.log(`Rol ID: ${id_rol} no encontrado`);
+        return res.status(400).send('El rol especificado no es válido');
+      }
+  
+      // Si el rol es válido, actualiza el rol del usuario
+      const queryUpdateRole = `
+        INSERT INTO usuario_roles (id_usuario, id_rol) 
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE id_rol = VALUES(id_rol);`;
+  
+      db.query(queryUpdateRole, [id_usuario, id_rol], (err, result) => {
+        if (err) {
+          console.error('Error al actualizar el rol del usuario:', err);
+          res.status(500).send('Error en el servidor al actualizar el rol');
+        } else {
+          console.log(`Rol actualizado correctamente para el usuario ID: ${id_usuario}, nuevo rol ID: ${id_rol}`);
+          res.send('Rol actualizado correctamente');
+        }
+      });
+    });
+  });
+
+// Endpoint para obtener el rol de acceso del usuario
+app.get('/rol-acceso', (req, res) => {
+    const query = "SELECT id_rol FROM rol_acceso LIMIT 1"; // Obtener solo un registro, puedes ajustar según tus necesidades
+
+    db.query(query, (err, result) => {
+        if (err) {
+            // Mensaje de error en la terminal
+            console.error("Error al obtener el rol de acceso:", err);
+            return res.status(500).json({ error: "Error al obtener el rol de acceso" });
+        }
+
+        // Verificar si se encontró el rol
+        if (result.length === 0) {
+            return res.status(200).json({ rol: null }); // Devolver null si no se encontró el rol
+        }
+
+        const id_rol = result[0].id_rol; // Obtener el id_rol de la primera fila
+        return res.status(200).json({ rol: id_rol }); // Devolver el rol encontrado
     });
 });
 
